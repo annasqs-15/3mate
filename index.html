@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#f7f4ef">
+<meta name="theme-color" content="#24272c">
+<meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -899,6 +900,20 @@ body{
 .preset-btn:hover{background:linear-gradient(180deg,#575e68,#424952);}
 .review-tab{background:linear-gradient(180deg,#41474f,#333840);}
 .review-board-wrap{background:linear-gradient(145deg,#4c5159,#292d33);}
+
+
+/* ============================================================
+   Fixed theme lock
+   The game owns its palette; device/browser light-dark preference must not
+   recolor the document or native controls behind the intended dark UI.
+   ============================================================ */
+:root{color-scheme:dark only;}
+html,body{
+  color-scheme:dark;
+  forced-color-adjust:none;
+  -webkit-text-size-adjust:100%;
+  background-color:#24272c;
+}
 
 </style>
 </head>
