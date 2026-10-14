@@ -5080,14 +5080,18 @@ function renderAll(){
   }
   const controls=document.getElementById('controlsRow');
   const hintAllowed=state.status==='player-turn' && !state.daily.complete;
+  controls.hidden=false;
   if(state.status==='player-turn'){
     controls.className='controls-row';
     controls.innerHTML='<button class="btn btn-ghost" id="hintBtn">'+ICONS.bulb+' Hint</button><button class="btn btn-reveal" id="revealBtn">'+ICONS.eye+' Reveal</button>';
     if(hintAllowed) document.getElementById('hintBtn').addEventListener('click',useHint);
     document.getElementById('revealBtn').addEventListener('click',revealSolution);
   }else if(state.status==='puzzle-complete'){
-    controls.className='controls-row'; controls.innerHTML='<button class="btn btn-ghost" disabled>Daily puzzle locked</button><button class="btn btn-primary" id="nextDailyBottom">'+(state.currentDailySlot===2?'Finish':'Next puzzle')+' '+ICONS.arrowRight+'</button>';
-    document.getElementById('nextDailyBottom').addEventListener('click',function(){if(state.currentDailySlot===2)finishDailyChallenge();else goToNextDailyPuzzle();});
+    // The banner already contains the single Next puzzle action.
+    // Hide Hint/Reveal until that action loads the next puzzle.
+    controls.className='controls-row';
+    controls.innerHTML='';
+    controls.hidden=true;
   }else if(state.status==='daily-complete'){
     controls.className='controls-row single'; controls.innerHTML='<button class="btn btn-primary" id="reviewBottom">Review today’s puzzles</button>';
     document.getElementById('reviewBottom').addEventListener('click',openReview);
