@@ -848,6 +848,58 @@ body{
   .btn{min-height:44px;}
 }
 
+
+/* ============================================================
+   Neutral shadow correction
+   Removes the warm yellow/orange cast from ambient surfaces and board frame.
+   Gold remains reserved for intentional accent states only.
+   ============================================================ */
+:root{
+  --bg:#24272c;
+  --bg-2:#2b2f35;
+  --surface:#353a42;
+  --surface-2:#3e444d;
+  --surface-3:#484f59;
+  --muted:#c5cbd3;
+  --muted-2:#9199a5;
+  --line:rgba(239,244,250,.12);
+  --line-strong:rgba(239,244,250,.19);
+  --shadow-soft:0 8px 18px rgba(0,0,0,.22),0 2px 0 rgba(255,255,255,.035) inset;
+}
+body{
+  background:
+    radial-gradient(760px 420px at 50% -6%,rgba(76,86,101,.28),transparent 70%),
+    radial-gradient(500px 300px at 8% 42%,rgba(65,86,104,.1),transparent 72%),
+    linear-gradient(180deg,#30343b 0%,var(--bg) 42%,#202329 100%);
+}
+.rating-pill,.header-streak{
+  background:linear-gradient(180deg,rgba(67,72,83,.96),rgba(49,52,59,.96));
+}
+.header-streak{background:linear-gradient(180deg,rgba(92,76,65,.92),rgba(62,57,55,.94));border-color:rgba(255,170,74,.24);}
+.board-wrap{
+  background:linear-gradient(145deg,#4c5159 0%,#393e46 48%,#292d33 100%);
+}
+.board{
+  box-shadow:0 12px 23px rgba(0,0,0,.34),0 0 0 2px rgba(17,20,24,.42);
+}
+.sq.light{background:linear-gradient(145deg,#eee9da 0%,#ddd8c9 100%);}
+.sq.dark{background:linear-gradient(145deg,#78a75b 0%,#628d4a 100%);}
+.sq.light .coord{color:#668457;}.sq.dark .coord{color:#ebf0e2;}
+.puzzle-stage-chip{background:linear-gradient(180deg,rgba(69,78,91,.82),rgba(48,55,65,.82));color:#f0c967;border-color:rgba(245,198,83,.22);}
+.btn-ghost{background:linear-gradient(180deg,#484e57,#383e47);}
+.btn-ghost:hover{background:linear-gradient(180deg,#535a64,#414852);}
+.btn-reveal{background:linear-gradient(180deg,#4b4d59,#393b47);}
+.btn-reveal:hover{background:linear-gradient(180deg,#565966,#424551);}
+.btn-icon{background:linear-gradient(180deg,#474d56,#383e46);}
+.btn-icon:hover{background:linear-gradient(180deg,#535a64,#414852);}
+.onboard-overlay{background:radial-gradient(800px 600px at 50% 0%,rgba(59,68,81,.92),rgba(25,28,33,.98));}
+.onboard-card,.review-card{background:linear-gradient(160deg,#41474f 0%,#333840 100%);}
+.onboard-input{background:linear-gradient(180deg,#2e333a,#272b31);}
+.preset-btn{background:linear-gradient(180deg,#4b515a,#393f47);}
+.preset-btn:hover{background:linear-gradient(180deg,#575e68,#424952);}
+.review-tab{background:linear-gradient(180deg,#41474f,#333840);}
+.review-board-wrap{background:linear-gradient(145deg,#4c5159,#292d33);}
+
 </style>
 </head>
 <body>
