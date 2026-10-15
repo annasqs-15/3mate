@@ -915,6 +915,44 @@ html,body{
   background-color:#24272c;
 }
 
+
+/* ============================================================
+   Header and stage polish
+   ============================================================ */
+.brand-lockup{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
+.wordmark{font-size:28px!important;line-height:.95;text-shadow:none!important;filter:none!important;}
+.brand-subtitle{display:block!important;opacity:.75!important;font-size:10px!important;line-height:1.1;color:#c6cdd6!important;white-space:nowrap;}
+.brand-divider,.brand-mode{display:none;}
+.header-streak{gap:5px;min-width:65px!important;height:42px!important;border-radius:17px!important;}
+.streak-icon{display:inline-flex!important;width:20px;height:20px;transform:none!important;opacity:1!important;text-shadow:none!important;}
+.streak-icon svg{display:block;width:100%;height:100%;}
+.header-streak.zero .streak-icon{opacity:.72!important;}
+.header-streak.has-streak .streak-icon{filter:drop-shadow(0 2px 4px rgba(255,134,44,.38));}
+.header-streak.has-streak{border-color:rgba(255,170,74,.35);}
+.daily-progress{gap:9px!important;border-bottom:0!important;padding:0 2px!important;}
+.progress-step{
+  width:auto!important;min-width:0!important;flex:1;height:34px!important;padding:0 9px!important;
+  border:1px solid rgba(245,247,250,.18)!important;border-radius:12px!important;
+  background:linear-gradient(180deg,#515965 0%,#3e454f 68%,#353b44 100%)!important;
+  color:#c4cad3!important;font-size:12px!important;font-weight:750!important;
+  box-shadow:0 4px 0 #252b33,0 6px 12px rgba(0,0,0,.18),0 1px 0 rgba(255,255,255,.15) inset!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.32);transform:none!important;
+}
+.progress-step.active{
+  color:#fff9e9!important;border-color:rgba(255,216,104,.58)!important;
+  background:linear-gradient(180deg,#f8d66a 0%,#eab449 68%,#c98d32 100%)!important;
+  box-shadow:0 4px 0 #8b5f25,0 7px 14px rgba(221,164,58,.22),0 1px 0 rgba(255,255,255,.3) inset!important;
+  text-shadow:0 1px 0 rgba(111,70,20,.45);
+}
+.progress-step.done{
+  color:#f1ffdf!important;border-color:rgba(165,231,105,.48)!important;
+  background:linear-gradient(180deg,#9be05b 0%,#72bd43 68%,#579533 100%)!important;
+  box-shadow:0 4px 0 #3f7029,0 7px 14px rgba(95,177,56,.18),0 1px 0 rgba(255,255,255,.24) inset!important;
+  text-shadow:0 1px 0 rgba(41,92,25,.45);
+}
+.progress-step::after{display:none!important;}
+.progress-line{flex:0 0 8px!important;height:3px!important;background:#555d68!important;box-shadow:0 1px 0 rgba(255,255,255,.08) inset;border-radius:99px!important;}
+
 </style>
 </head>
 <body>
@@ -951,7 +989,7 @@ html,body{
         <span id="ratingValue">1200</span>
         <span class="rating-delta" id="ratingDelta"></span>
       </div>
-      <div class="header-streak" id="headerStreak"><span class="streak-icon">♨</span><span id="streakValue">0</span></div>
+      <div class="header-streak zero" id="headerStreak"><span class="streak-icon" id="streakIcon" aria-hidden="true"></span><span id="streakValue">0</span></div>
     </div>
   </div>
 
@@ -4083,7 +4121,8 @@ const PUZZLES_RAW=[
    ============================================================ */
 
 const ICONS = {
-  flame: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3-2 4-2 7a3 3 0 006 0c0-1-.5-2-.5-2 2 1 3.5 3.5 3.5 6a7 7 0 01-14 0c0-4.5 4-6.5 4-9 0-1-.3-1.5-1-2 1.5 0 3.5.5 4 0z"/></svg>',
+  flame: '<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="flameGold" x1="8" y1="4" x2="23" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe27a"/><stop offset=".48" stop-color="#ffad35"/><stop offset="1" stop-color="#ee6635"/></linearGradient><linearGradient id="flameCore" x1="16" y1="13" x2="16" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#fff7c5"/><stop offset="1" stop-color="#ffd35a"/></linearGradient></defs><path d="M17.3 2.8c2.1 5.1-1.2 7.1 2 10.2 1.2 1.2 2 0 2-2.5 3.8 2.3 6 6.1 5.2 10.3C25.6 26.2 21.5 29 16 29c-6.3 0-10.8-3.9-10.8-9.4 0-4.2 2.5-7.2 5.1-9.4-.1 3.2 1.2 4.9 2.6 4.9 2.3 0 1.5-4.4 4.4-7.1.9-.9 1.1-2.9 0-5.2z" fill="url(#flameGold)" stroke="#8f482c" stroke-width="1.1" stroke-linejoin="round"/><path d="M16.2 14.2c1.2 2.2-.3 3.7 1.3 5.2 1.2 1.1 1.2 2.5.6 3.6-.5 1-1.5 1.6-2.8 1.6-2.1 0-3.5-1.4-3.5-3.3 0-1.4.8-2.4 1.7-3.2-.1 1.1.3 1.7.9 1.7.9 0 .5-2.7 1.8-3.6z" fill="url(#flameCore)"/></svg>',
+  flameOff: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M17.3 2.8c2.1 5.1-1.2 7.1 2 10.2 1.2 1.2 2 0 2-2.5 3.8 2.3 6 6.1 5.2 10.3C25.6 26.2 21.5 29 16 29c-6.3 0-10.8-3.9-10.8-9.4 0-4.2 2.5-7.2 5.1-9.4-.1 3.2 1.2 4.9 2.6 4.9 2.3 0 1.5-4.4 4.4-7.1.9-.9 1.1-2.9 0-5.2z" fill="#747b86" stroke="#454c57" stroke-width="1.2" stroke-linejoin="round"/><path d="M16.2 14.2c1.2 2.2-.3 3.7 1.3 5.2 1.2 1.1 1.2 2.5.6 3.6-.5 1-1.5 1.6-2.8 1.6-2.1 0-3.5-1.4-3.5-3.3 0-1.4.8-2.4 1.7-3.2-.1 1.1.3 1.7.9 1.7.9 0 .5-2.7 1.8-3.6z" fill="#9ba1aa" opacity=".55"/></svg>',
   bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 3z"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
@@ -5023,7 +5062,11 @@ function renderDailyProgress(){
 }
 function renderAll(){
   const ratingEl=document.getElementById('ratingValue'); if(ratingEl) ratingEl.textContent=Math.round(state.playerRating);
-  const streakEl=document.getElementById('streakValue'); if(streakEl) streakEl.textContent=currentDayDisplayStreak();
+  const displayStreak=currentDayDisplayStreak();
+  const streakEl=document.getElementById('streakValue'); if(streakEl) streakEl.textContent=displayStreak;
+  const streakBadge=document.getElementById('headerStreak'), streakIcon=document.getElementById('streakIcon');
+  if(streakBadge){ streakBadge.classList.toggle('zero',displayStreak===0); streakBadge.classList.toggle('has-streak',displayStreak>0); }
+  if(streakIcon) streakIcon.innerHTML=displayStreak>0?ICONS.flame:ICONS.flameOff;
   const dateEl=document.getElementById('dailyDate'); if(dateEl){const d=new Date(); dateEl.textContent=d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
   renderDailyProgress();
   const counter=document.getElementById('puzzleCounter'); if(counter) counter.textContent='Puzzle '+(state.daily?Math.min(state.currentDailySlot+1,3):1)+' / 3';
