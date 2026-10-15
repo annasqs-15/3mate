@@ -956,7 +956,7 @@ html,body{
 
 
 /* Move-quality SVG badges */
-.move-quality-badge{position:absolute;width:4.675%;height:4.675%;z-index:20;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));}
+.move-quality-badge{position:absolute;width:7.48%;height:7.48%;z-index:20;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));}
 .move-quality-badge.leaving{animation:moveQualityPopOut .42s var(--ease-out) forwards;}
 .move-quality-badge svg{display:block;width:100%;height:100%;}
 @keyframes moveQualityPop{0%{opacity:0;transform:scale(.35) rotate(-12deg)}70%{transform:scale(1.12) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
@@ -4542,7 +4542,7 @@ function setPlayerMoveBadge(square,label){
       clearPlayerMoveBadge();
       renderBoard();
     },440);
-  },2500);
+  },3500);
 }
 function renderMoveQualityBadge(){
   const layer=document.getElementById('moveBadgeLayer');
@@ -4553,8 +4553,8 @@ function renderMoveQualityBadge(){
   const badge=document.createElement('div');
   const pos=squarePos(badgeState.square);
   badge.className='move-quality-badge '+badgeState.label.toLowerCase()+(badgeState.exiting?' leaving':'');
-  badge.style.left=(pos.left+7.55)+'%';
-  badge.style.top=(pos.top+0.35)+'%';
+  badge.style.left=(pos.left+4.77)+'%';
+  badge.style.top=(pos.top+0.25)+'%';
   badge.setAttribute('aria-label',badgeState.label+' move');
   badge.title=badgeState.label+' move';
   badge.innerHTML=moveQualityBadgeSVG(badgeState.label);
