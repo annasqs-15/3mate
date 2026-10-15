@@ -956,7 +956,7 @@ html,body{
 
 
 /* Move-quality SVG badges */
-.move-quality-badge{position:absolute;width:51%;height:51%;z-index:20;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));}
+.move-quality-badge{position:absolute;width:4.675%;height:4.675%;z-index:20;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));}
 .move-quality-badge.leaving{animation:moveQualityPopOut .42s var(--ease-out) forwards;}
 .move-quality-badge svg{display:block;width:100%;height:100%;}
 @keyframes moveQualityPop{0%{opacity:0;transform:scale(.35) rotate(-12deg)}70%{transform:scale(1.12) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
@@ -4144,9 +4144,9 @@ const ICONS = {
 };
 
 const MOVE_QUALITY_SVGS = {
-  Brilliant: '<svg viewBox="0 0 40 40" role="img" aria-label="Brilliant move"><defs><linearGradient id="badgeBrilliant" x1="7" y1="5" x2="33" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#8df7ed"/><stop offset=".48" stop-color="#22c9c7"/><stop offset="1" stop-color="#168da8"/></linearGradient></defs><circle cx="20" cy="20" r="18" fill="url(#badgeBrilliant)" stroke="#d4fffa" stroke-width="1.5"/><path d="M20 8l2.4 7.1 7.1 2.4-7.1 2.4L20 27l-2.4-7.1-7.1-2.4 7.1-2.4L20 8z" fill="#fff" opacity=".95"/><circle cx="29.2" cy="10.7" r="2" fill="#fff" opacity=".85"/></svg>',
-  Best: '<svg viewBox="0 0 40 40" role="img" aria-label="Best move"><defs><linearGradient id="badgeBest" x1="8" y1="4" x2="31" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#c7f47a"/><stop offset=".5" stop-color="#72c94c"/><stop offset="1" stop-color="#398d45"/></linearGradient></defs><circle cx="20" cy="20" r="18" fill="url(#badgeBest)" stroke="#efffc7" stroke-width="1.5"/><path d="M20 7.5l3.5 7.1 7.8 1.1-5.7 5.5 1.4 7.8-7-3.7-7 3.7 1.4-7.8-5.7-5.5 7.8-1.1L20 7.5z" fill="#fff" opacity=".96"/></svg>'
-};
+  Brilliant: '<svg viewBox="0 0 40 40" role="img" aria-label="Brilliant move"><defs><radialGradient id="badgeBrilliant" cx="28%" cy="18%" r="88%"><stop stop-color="#75f4ec"/><stop offset=".42" stop-color="#20c8c7"/><stop offset="1" stop-color="#138ca6"/></radialGradient><filter id="badgeBrilliantShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="1.8" stdDeviation="1.2" flood-color="#07566d" flood-opacity=".55"/></filter></defs><circle cx="20" cy="20" r="16.4" fill="url(#badgeBrilliant)" stroke="#c8fffa" stroke-width="1.25" filter="url(#badgeBrilliantShadow)"/><ellipse cx="15" cy="12.5" rx="7" ry="3.2" fill="#fff" opacity=".18" transform="rotate(-25 15 12.5)"/><text x="20" y="26.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900" letter-spacing="-1.5" fill="#fff">!!</text></svg>',
+  Best: '<svg viewBox="0 0 40 40" role="img" aria-label="Best move"><defs><radialGradient id="badgeBest" cx="28%" cy="18%" r="88%"><stop stop-color="#d8f985"/><stop offset=".42" stop-color="#78cf4d"/><stop offset="1" stop-color="#398f46"/></radialGradient><filter id="badgeBestShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="1.8" stdDeviation="1.2" flood-color="#215c2d" flood-opacity=".55"/></filter></defs><circle cx="20" cy="20" r="16.4" fill="url(#badgeBest)" stroke="#efffc8" stroke-width="1.25" filter="url(#badgeBestShadow)"/><ellipse cx="15" cy="12.5" rx="7" ry="3.2" fill="#fff" opacity=".18" transform="rotate(-25 15 12.5)"/><path d="M11.8 20.4l5.1 5 11.1-11.2" fill="none" stroke="#fff" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+}
 function moveQualityBadgeSVG(label){ return MOVE_QUALITY_SVGS[label] || ''; }
 /* ---- piece silhouettes, drawn as original geometric shapes on a 45x45 viewbox ---- */
 const PIECE_PNG={
@@ -4553,8 +4553,8 @@ function renderMoveQualityBadge(){
   const badge=document.createElement('div');
   const pos=squarePos(badgeState.square);
   badge.className='move-quality-badge '+badgeState.label.toLowerCase()+(badgeState.exiting?' leaving':'');
-  badge.style.left=(pos.left+5.75)+'%';
-  badge.style.top=(pos.top+0.4)+'%';
+  badge.style.left=(pos.left+7.55)+'%';
+  badge.style.top=(pos.top+0.35)+'%';
   badge.setAttribute('aria-label',badgeState.label+' move');
   badge.title=badgeState.label+' move';
   badge.innerHTML=moveQualityBadgeSVG(badgeState.label);
