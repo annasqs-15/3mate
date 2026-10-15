@@ -192,6 +192,7 @@ button{-webkit-tap-highlight-color:transparent;}
 .coord.file{right:3px;bottom:2px;}.coord.rank{left:3px;top:2px;}
 .sq.light .coord{color:var(--board-dark-2);}.sq.dark .coord{color:#e8edda;}
 #pieceLayer{position:absolute;inset:0;z-index:5;pointer-events:none;}
+#moveBadgeLayer{position:absolute;inset:0;z-index:20;pointer-events:none;}
 .piece{
   position:absolute;width:12.5%;height:12.5%;pointer-events:auto;touch-action:none;
   box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:grab;
@@ -955,9 +956,11 @@ html,body{
 
 
 /* Move-quality SVG badges */
-.move-quality-badge{position:absolute;top:3%;right:3%;width:34%;height:34%;z-index:6;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 2px 2px rgba(0,0,0,.32));}
+.move-quality-badge{position:absolute;width:51%;height:51%;z-index:20;pointer-events:none;display:grid;place-items:center;animation:moveQualityPop .32s var(--ease-spring);filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));}
+.move-quality-badge.leaving{animation:moveQualityPopOut .42s var(--ease-out) forwards;}
 .move-quality-badge svg{display:block;width:100%;height:100%;}
 @keyframes moveQualityPop{0%{opacity:0;transform:scale(.35) rotate(-12deg)}70%{transform:scale(1.12) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes moveQualityPopOut{0%{opacity:1;transform:scale(1) translateY(0)}45%{opacity:1;transform:scale(1.16) translateY(-5%)}100%{opacity:0;transform:scale(.25) translateY(18%)}}
 </style>
 </head>
 <body>
@@ -4209,6 +4212,7 @@ const state = {
   legalTargets:[],
   lastMove:null,
   playerMoveBadge:null,
+  moveBadgeTimer:null,
   status:'loading',
   hintUsed:false,
   currentMistakes:0,
@@ -4463,7 +4467,7 @@ function loadPuzzleByIndex(idx, isRetry, resumeAtMoveIndex){
   state.puzzleMoveIndex=0;
   state.playerColor=state.chess.turn;
   state.boardFlipped=(state.playerColor==='b');
-  state.selectedSquare=null; state.legalTargets=[]; state.lastMove=null; state.playerMoveBadge=null;
+  state.selectedSquare=null; state.legalTargets=[]; state.lastMove=null; clearPlayerMoveBadge();
   state.pendingPromotion=null;
   state.status='player-turn';
   hideRatingDelta();
@@ -4517,6 +4521,45 @@ function recordDailyMistake(){
   },260);
   saveProgress();
 }
+function clearPlayerMoveBadge(){
+  clearTimeout(state.moveBadgeTimer);
+  state.moveBadgeTimer=null;
+  state.playerMoveBadge=null;
+  const layer=document.getElementById('moveBadgeLayer');
+  if(layer) layer.innerHTML='';
+}
+function setPlayerMoveBadge(square,label){
+  clearPlayerMoveBadge();
+  if(!label) return;
+  const badge={square:square,label:label,exiting:false};
+  state.playerMoveBadge=badge;
+  state.moveBadgeTimer=setTimeout(function(){
+    if(state.playerMoveBadge!==badge) return;
+    badge.exiting=true;
+    renderBoard();
+    state.moveBadgeTimer=setTimeout(function(){
+      if(state.playerMoveBadge!==badge) return;
+      clearPlayerMoveBadge();
+      renderBoard();
+    },440);
+  },2500);
+}
+function renderMoveQualityBadge(){
+  const layer=document.getElementById('moveBadgeLayer');
+  if(!layer) return;
+  layer.innerHTML='';
+  const badgeState=state.playerMoveBadge;
+  if(!badgeState) return;
+  const badge=document.createElement('div');
+  const pos=squarePos(badgeState.square);
+  badge.className='move-quality-badge '+badgeState.label.toLowerCase()+(badgeState.exiting?' leaving':'');
+  badge.style.left=(pos.left+5.75)+'%';
+  badge.style.top=(pos.top+0.4)+'%';
+  badge.setAttribute('aria-label',badgeState.label+' move');
+  badge.title=badgeState.label+' move';
+  badge.innerHTML=moveQualityBadgeSVG(badgeState.label);
+  layer.appendChild(badge);
+}
 function commitPlayerMove(mv){
   if(state.status!=='player-turn') return;
   lsSet('tacdchess_board_tip_seen','1');
@@ -4530,7 +4573,7 @@ function commitPlayerMove(mv){
     if(info.capturedId) removePieceWithFade(info.capturedId);
     state.lastMove={from:fromAlg,to:toAlg,good:true};
     const displayLabel=getPuzzleDisplayLabel(state.currentPuzzleIndex,played);
-    state.playerMoveBadge=displayLabel?{square:toAlg,label:displayLabel}:null;
+    setPlayerMoveBadge(toAlg,displayLabel);
     state.puzzleMoveIndex++;
     playSound(mv.capture?'capture':'move');
     if(state.chess.inCheck(state.chess.turn)) setTimeout(function(){playSound('check');},80);
@@ -4543,7 +4586,6 @@ function commitPlayerMove(mv){
 }
 function playOpponentReply(){
   if(state.status!=='opponent-move') return;
-  state.playerMoveBadge=null;
   const puzzle=PUZZLES[state.currentPuzzleIndex];
   if(state.puzzleMoveIndex>=puzzle.moves.length){ completeCurrentPuzzle('solved'); return; }
   const uci=puzzle.moves[state.puzzleMoveIndex];
@@ -4760,16 +4802,6 @@ function updateHighlights(){
     el.classList.toggle('check-glow', kingAlg===alg);
     const marker = el.querySelector('.dot,.ring');
     if(marker) marker.remove();
-    const oldBadge=el.querySelector('.move-quality-badge');
-    if(oldBadge) oldBadge.remove();
-    if(state.playerMoveBadge && state.playerMoveBadge.square===alg){
-      const badge=document.createElement('div');
-      badge.className='move-quality-badge '+state.playerMoveBadge.label.toLowerCase();
-      badge.setAttribute('aria-label',state.playerMoveBadge.label+' move');
-      badge.title=state.playerMoveBadge.label+' move';
-      badge.innerHTML=moveQualityBadgeSVG(state.playerMoveBadge.label);
-      el.appendChild(badge);
-    }
     if(state.legalTargets.indexOf(alg)!==-1){
       const m = document.createElement('div');
       m.className = pieceSquares.has(alg) ? 'ring' : 'dot';
@@ -4785,6 +4817,7 @@ function updateHighlights(){
 function renderBoard(){
   updateHighlights();
   syncPieceDOM();
+  renderMoveQualityBadge();
   renderPromotionPicker();
 }
 
@@ -4997,7 +5030,7 @@ function buildSkeleton(){
         '<div class="status-text"><span class="turn-dot w" id="turnDot"></span><span id="statusLabel">Loading…</span></div>'+ 
       '</div>'+ 
       '<div class="board-wrap" id="boardWrap">'+
-        '<div class="board" id="boardGrid"><div class="squares-grid" id="squaresGrid"></div><div id="pieceLayer"></div></div>'+ 
+        '<div class="board" id="boardGrid"><div class="squares-grid" id="squaresGrid"></div><div id="pieceLayer"></div><div id="moveBadgeLayer"></div></div>'+
         '<div class="board-shroud" id="boardShroud"></div>'+ 
         
       '</div>'+ 
