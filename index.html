@@ -4303,6 +4303,7 @@ const SOUND_ASSETS={
   capture:'assets/audio/chess-capture.ogg'
 };
 const samplePlayers={};
+const SOUND_GAIN=1.55;
 function getCtx(){
   if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
   return audioCtx;
@@ -4314,7 +4315,7 @@ function playSample(kind){
     if(!audio){
       audio=new Audio(SOUND_ASSETS[kind]);
       audio.preload='auto';
-      audio.volume=0.52;
+      audio.volume=0.86;
       samplePlayers[kind]=audio;
     }
     audio.currentTime=0;
@@ -4331,7 +4332,7 @@ function beep(freq,dur,type,peak){
     osc.type = type||'sine'; osc.frequency.value = freq;
     const t0 = ctx.currentTime;
     gain.gain.setValueAtTime(0.0001,t0);
-    gain.gain.exponentialRampToValueAtTime(peak||0.15,t0+0.012);
+    gain.gain.exponentialRampToValueAtTime(Math.min(0.92,(peak||0.15)*SOUND_GAIN),t0+0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     osc.connect(gain); gain.connect(ctx.destination);
     osc.start(t0); osc.stop(t0+dur+0.03);
