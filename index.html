@@ -4305,7 +4305,7 @@ const SOUND_ASSETS={
 const samplePlayers={};
 const SOUND_GAIN=1.55;
 function soundBoost(kind){
-  return (kind==='wrong'||kind==='correct'||kind==='success'||kind==='checkmate') ? 4 : 3;
+  return (kind==='wrong'||kind==='success'||kind==='checkmate') ? 4 : 3;
 }
 function getCtx(){
   if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
@@ -4353,7 +4353,6 @@ function beep(freq,dur,type,peak,boost){
 }
 function playSound(kind){
   if(kind==='move' || kind==='capture') playSample(kind);
-  else if(kind==='correct') beep(640,0.09,'sine',0.13,soundBoost(kind));
   else if(kind==='wrong') beep(170,0.22,'sawtooth',0.11,soundBoost(kind));
   else if(kind==='check'){
     beep(520,0.09,'triangle',0.105,soundBoost(kind));
@@ -4688,7 +4687,7 @@ function completeCurrentPuzzle(result){
   if(detail.status==='solved'||detail.status==='revealed') return;
   detail.status=result; detail.mistakes=state.currentMistakes; detail.hintUsed=state.hintUsed;
   state.status='puzzle-complete';
-  pulseBoard(result==='solved'?'good':'good'); playSound(result==='solved'?'correct':'success');
+  pulseBoard(result==='solved'?'good':'good'); playSound('success');
   if(slot===2) setTimeout(finishDailyChallenge,520);
   saveProgress(); renderAll();
 }
