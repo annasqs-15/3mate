@@ -4304,6 +4304,9 @@ const SOUND_ASSETS={
 };
 const samplePlayers={};
 const SOUND_GAIN=1.55;
+function soundBoost(kind){
+  return (kind==='wrong'||kind==='correct'||kind==='success'||kind==='checkmate') ? 4 : 3;
+}
 function getCtx(){
   if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
   return audioCtx;
@@ -4311,19 +4314,29 @@ function getCtx(){
 function playSample(kind){
   if(!state.soundOn || !SOUND_ASSETS[kind]) return;
   try{
-    let audio=samplePlayers[kind];
-    if(!audio){
-      audio=new Audio(SOUND_ASSETS[kind]);
+    const ctx=getCtx();
+    let player=samplePlayers[kind];
+    if(!player){
+      const audio=new Audio(SOUND_ASSETS[kind]);
       audio.preload='auto';
       audio.volume=0.86;
-      samplePlayers[kind]=audio;
+      player={audio:audio,gain:null};
+      if(ctx){
+        const source=ctx.createMediaElementSource(audio);
+        const gain=ctx.createGain();
+        source.connect(gain); gain.connect(ctx.destination);
+        player.gain=gain;
+      }
+      samplePlayers[kind]=player;
     }
-    audio.currentTime=0;
-    const result=audio.play();
+    if(ctx && ctx.state==='suspended') ctx.resume().catch(function(){});
+    if(player.gain) player.gain.gain.value=soundBoost(kind);
+    player.audio.currentTime=0;
+    const result=player.audio.play();
     if(result && result.catch) result.catch(function(){});
   }catch(e){}
 }
-function beep(freq,dur,type,peak){
+function beep(freq,dur,type,peak,boost){
   if(!state.soundOn) return;
   const ctx = getCtx(); if(!ctx) return;
   if(ctx.state==='suspended'){ ctx.resume().catch(function(){}); }
@@ -4332,7 +4345,7 @@ function beep(freq,dur,type,peak){
     osc.type = type||'sine'; osc.frequency.value = freq;
     const t0 = ctx.currentTime;
     gain.gain.setValueAtTime(0.0001,t0);
-    gain.gain.exponentialRampToValueAtTime(Math.min(0.92,(peak||0.15)*SOUND_GAIN),t0+0.012);
+    gain.gain.exponentialRampToValueAtTime((peak||0.15)*SOUND_GAIN*(boost||1),t0+0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     osc.connect(gain); gain.connect(ctx.destination);
     osc.start(t0); osc.stop(t0+dur+0.03);
@@ -4340,18 +4353,18 @@ function beep(freq,dur,type,peak){
 }
 function playSound(kind){
   if(kind==='move' || kind==='capture') playSample(kind);
-  else if(kind==='correct') beep(640,0.09,'sine',0.13);
-  else if(kind==='wrong') beep(170,0.22,'sawtooth',0.11);
+  else if(kind==='correct') beep(640,0.09,'sine',0.13,soundBoost(kind));
+  else if(kind==='wrong') beep(170,0.22,'sawtooth',0.11,soundBoost(kind));
   else if(kind==='check'){
-    beep(520,0.09,'triangle',0.105);
-    setTimeout(function(){beep(700,0.14,'sine',0.095);},85);
+    beep(520,0.09,'triangle',0.105,soundBoost(kind));
+    setTimeout(function(){beep(700,0.14,'sine',0.095,soundBoost(kind));},85);
   }
   else if(kind==='checkmate'){
-    beep(330,0.12,'triangle',0.11);
-    setTimeout(function(){beep(494,0.14,'sine',0.105);},105);
-    setTimeout(function(){beep(659,0.28,'sine',0.115);},225);
+    beep(330,0.12,'triangle',0.11,soundBoost(kind));
+    setTimeout(function(){beep(494,0.14,'sine',0.105,soundBoost(kind));},105);
+    setTimeout(function(){beep(659,0.28,'sine',0.115,soundBoost(kind));},225);
   }
-  else if(kind==='success'){ beep(523,0.09,'sine',0.13); setTimeout(function(){beep(659,0.09,'sine',0.13);},90); setTimeout(function(){beep(784,0.17,'sine',0.14);},180); }
+  else if(kind==='success'){ beep(523,0.09,'sine',0.13,soundBoost(kind)); setTimeout(function(){beep(659,0.09,'sine',0.13,soundBoost(kind));},90); setTimeout(function(){beep(784,0.17,'sine',0.14,soundBoost(kind));},180); }
 }
 function getMoveSoundType(move){
   if(state.chess.isCheckmate()) return 'checkmate';
