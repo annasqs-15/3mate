@@ -4298,9 +4298,29 @@ const pieceEls = new Map(); // piece id -> stable DOM element (enables CSS-trans
 
 /* ---- sound ---- */
 let audioCtx=null;
+const SOUND_ASSETS={
+  move:'assets/audio/chess-move.ogg',
+  capture:'assets/audio/chess-capture.ogg'
+};
+const samplePlayers={};
 function getCtx(){
   if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
   return audioCtx;
+}
+function playSample(kind){
+  if(!state.soundOn || !SOUND_ASSETS[kind]) return;
+  try{
+    let audio=samplePlayers[kind];
+    if(!audio){
+      audio=new Audio(SOUND_ASSETS[kind]);
+      audio.preload='auto';
+      audio.volume=0.52;
+      samplePlayers[kind]=audio;
+    }
+    audio.currentTime=0;
+    const result=audio.play();
+    if(result && result.catch) result.catch(function(){});
+  }catch(e){}
 }
 function beep(freq,dur,type,peak){
   if(!state.soundOn) return;
@@ -4318,12 +4338,25 @@ function beep(freq,dur,type,peak){
   }catch(e){}
 }
 function playSound(kind){
-  if(kind==='move') beep(430,0.085,'triangle',0.11);
-  else if(kind==='capture') beep(300,0.1,'square',0.11);
+  if(kind==='move' || kind==='capture') playSample(kind);
   else if(kind==='correct') beep(640,0.09,'sine',0.13);
   else if(kind==='wrong') beep(170,0.22,'sawtooth',0.11);
-  else if(kind==='check') beep(260,0.14,'square',0.09);
+  else if(kind==='check'){
+    beep(520,0.09,'triangle',0.105);
+    setTimeout(function(){beep(700,0.14,'sine',0.095);},85);
+  }
+  else if(kind==='checkmate'){
+    beep(330,0.12,'triangle',0.11);
+    setTimeout(function(){beep(494,0.14,'sine',0.105);},105);
+    setTimeout(function(){beep(659,0.28,'sine',0.115);},225);
+  }
   else if(kind==='success'){ beep(523,0.09,'sine',0.13); setTimeout(function(){beep(659,0.09,'sine',0.13);},90); setTimeout(function(){beep(784,0.17,'sine',0.14);},180); }
+}
+function getMoveSoundType(move){
+  if(state.chess.isCheckmate()) return 'checkmate';
+  if(state.chess.inCheck(state.chess.turn)) return 'check';
+  if(move.capture || move.isEnPassant) return 'capture';
+  return 'move';
 }
 
 /* ---- daily challenge selection ---- */
@@ -4577,8 +4610,7 @@ function commitPlayerMove(mv){
     const displayLabel=getPuzzleDisplayLabel(state.currentPuzzleIndex,played);
     setPlayerMoveBadge(toAlg,displayLabel);
     state.puzzleMoveIndex++;
-    playSound(mv.capture?'capture':'move');
-    if(state.chess.inCheck(state.chess.turn)) setTimeout(function(){playSound('check');},80);
+    playSound(getMoveSoundType(mv));
     showTemporaryFeedback('');
     if(state.puzzleMoveIndex>=puzzle.moves.length){ renderBoard(); setTimeout(function(){completeCurrentPuzzle('solved');},300); }
     else { state.status='opponent-move'; renderAll(); setTimeout(playOpponentReply,520); }
@@ -4596,8 +4628,7 @@ function playOpponentReply(){
   const info=applyMoveToPieceList(mv); state.chess.makeMove(mv);
   if(info.capturedId) removePieceWithFade(info.capturedId);
   state.lastMove={from:algebraic(mv.from),to:algebraic(mv.to),good:false}; state.puzzleMoveIndex++;
-  playSound(mv.capture?'capture':'move'); state.status='player-turn'; renderAll();
-  if(state.chess.inCheck(state.chess.turn)) playSound('check');
+  playSound(getMoveSoundType(mv)); state.status='player-turn'; renderAll();
 }
 function expectedFromNow(){
   const p=PUZZLES[state.currentPuzzleIndex]; return p && p.moves[state.puzzleMoveIndex] ? p.moves[state.puzzleMoveIndex] : null;
@@ -4660,7 +4691,7 @@ function stepReveal(){
   const info=applyMoveToPieceList(mv); state.chess.makeMove(mv);
   if(info.capturedId) removePieceWithFade(info.capturedId);
   state.lastMove={from:algebraic(mv.from),to:algebraic(mv.to)}; state.puzzleMoveIndex++;
-  playSound(mv.capture?'capture':'move'); renderBoard(); setTimeout(stepReveal,520);
+  playSound(getMoveSoundType(mv)); renderBoard(); setTimeout(stepReveal,520);
 }
 function useHint(){
   if(state.status!=='player-turn'||state.pendingPromotion) return;
