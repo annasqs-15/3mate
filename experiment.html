@@ -5181,7 +5181,7 @@ function renderDailyProgress(){
     el.classList.toggle('active',i===state.currentDailySlot && !state.daily.complete);
   });
 }
-function renderAll(){
+function renderDailyAll(){
   const ratingEl=document.getElementById('ratingValue'); if(ratingEl) ratingEl.textContent=Math.round(state.playerRating);
   const displayStreak=currentDayDisplayStreak();
   const streakEl=document.getElementById('streakValue'); if(streakEl) streakEl.textContent=displayStreak;
@@ -5297,6 +5297,124 @@ function checkDayChange(){
   }
 }
 
+/* ---- unlimited puzzle experiment mode ----
+   This file intentionally keeps the original board/engine and replaces only
+   the daily-session lifecycle with an endless rating-based puzzle loop.
+-------------------------------------------------------------------------- */
+const experimentBaseRenderAll = renderDailyAll;
+function chooseExperimentPuzzle(){
+  if(!PUZZLES.length) return 0;
+  if(state.playedPuzzleIds.size >= PUZZLES.length) state.playedPuzzleIds.clear();
+  const target=state.playerRating;
+  const candidates=[];
+  for(let i=0;i<PUZZLES.length;i++){
+    if(!state.playedPuzzleIds.has(i)) candidates.push(i);
+  }
+  if(!candidates.length){ state.playedPuzzleIds.clear(); return Math.floor(Math.random()*PUZZLES.length); }
+  candidates.sort(function(a,b){
+    return Math.abs(PUZZLES[a].rating-target)-Math.abs(PUZZLES[b].rating-target);
+  });
+  const pool=candidates.slice(0,Math.min(18,candidates.length));
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function createExperimentSession(idx){
+  const p=PUZZLES[idx];
+  state.daily={
+    date:'unlimited',
+    puzzleIds:[idx],
+    slots:[{status:'pending',mistakes:0,hintUsed:false}],
+    currentSlot:0,
+    complete:false,
+    completedAt:null,
+    ratingBefore:state.playerRating,
+    ratingDelta:0
+  };
+  state.currentDailySlot=0;
+  state.currentPuzzleIndex=idx;
+  state.currentMistakes=0;
+  state.hintUsed=false;
+  state.ratingDeltaToday=0;
+  state.experimentPuzzleNumber=(state.experimentPuzzleNumber||0)+1;
+  state.playedPuzzleIds.add(idx);
+  loadPuzzleByIndex(idx,false,0);
+  saveProgress();
+}
+function startExperimentPuzzle(){
+  createExperimentSession(chooseExperimentPuzzle());
+}
+function getExperimentRatingDelta(result){
+  const p=PUZZLES[state.currentPuzzleIndex];
+  if(!p) return 0;
+  let quality=result==='revealed'?0.35:1-Math.min(state.currentMistakes,5)*0.08;
+  if(state.hintUsed) quality*=0.78;
+  quality=clamp(quality,0.35,1);
+  const expected=1/(1+Math.pow(10,(p.rating-state.playerRating)/400));
+  return clamp(Math.round(26*(quality-expected)),-35,35);
+}
+function completeExperimentPuzzle(result){
+  if(state.status==='puzzle-complete') return;
+  const detail=state.daily && state.daily.slots[0];
+  if(!detail) return;
+  detail.status=result; detail.mistakes=state.currentMistakes; detail.hintUsed=state.hintUsed;
+  const delta=getExperimentRatingDelta(result);
+  state.playerRating=clamp(state.playerRating+delta,DAILY_MIN_RATING,DAILY_MAX_RATING);
+  state.ratingDeltaToday=delta;
+  state.daily.ratingDelta=delta;
+  state.daily.complete=false;
+  state.status='puzzle-complete';
+  pulseBoard('good');
+  playSound('success');
+  if(delta) showRatingDelta(delta); else hideRatingDelta();
+  saveProgress(); renderAll();
+}
+function completeCurrentPuzzle(result){ completeExperimentPuzzle(result); }
+function goToNextDailyPuzzle(){
+  if(state.status!=='puzzle-complete') return;
+  startExperimentPuzzle();
+}
+function retryPuzzle(){
+  if(state.status!=='player-turn') return;
+  loadPuzzleByIndex(state.currentPuzzleIndex,false,0);
+}
+function renderAll(){
+  experimentBaseRenderAll();
+  const p=PUZZLES[state.currentPuzzleIndex];
+  const subtitle=document.querySelector('.brand-subtitle');
+  if(subtitle) subtitle.textContent='Unlimited chess puzzle practice';
+  const mode=document.querySelector('.brand-mode');
+  if(mode) mode.textContent='Practice';
+  const eyebrow=document.getElementById('dailyEyebrow');
+  if(eyebrow) eyebrow.textContent='Unlimited puzzle practice';
+  const date=document.getElementById('dailyDate');
+  if(date) date.textContent='No daily limit';
+  const progress=document.getElementById('dailyProgress');
+  if(progress) progress.style.display='none';
+  const streak=document.getElementById('headerStreak');
+  if(streak) streak.style.display='none';
+  const counter=document.getElementById('puzzleCounter');
+  if(counter) counter.textContent='Puzzle #'+(state.experimentPuzzleNumber||1);
+  const chip=document.getElementById('difficultyChip');
+  if(chip && p) chip.textContent='Puzzle rating '+p.rating;
+  const title=document.getElementById('puzzleTitle');
+  if(title && state.status==='puzzle-complete') title.textContent='Puzzle solved';
+  const bannerSub=document.getElementById('bannerSub');
+  if(bannerSub && state.status==='puzzle-complete'){
+    const delta=state.ratingDeltaToday;
+    bannerSub.textContent=(delta>0?'Puzzle Rating +'+delta:delta<0?'Puzzle Rating '+delta:'Puzzle Rating unchanged')+' · Ready for the next puzzle';
+  }
+  const note=document.getElementById('dailyHintNote');
+  if(note && state.status==='player-turn') note.textContent=state.hintUsed?'Hint used · Rating adjusts after this puzzle.':'Unlimited puzzles · Rating adjusts after every result.';
+}
+async function experimentInit(){
+  ensureUserId(); buildSkeleton();
+  const onboarded=await loadProgress();
+  if(!onboarded) await showOnboarding();
+  startExperimentPuzzle();
+  document.getElementById('soundBtn').innerHTML=state.soundOn?ICONS.soundOn:ICONS.soundOff;
+  document.getElementById('soundBtn').classList.toggle('active',state.soundOn);
+  saveProgress();
+}
+
 /* ---- init ---- */
 async function init(){
   ensureUserId(); buildSkeleton();
@@ -5316,5 +5434,6 @@ async function init(){
   document.addEventListener('visibilitychange',function(){if(!document.hidden) checkDayChange();});
   window.addEventListener('focus',checkDayChange);
 }
+init=experimentInit;
 init();
 </script></body></html>
