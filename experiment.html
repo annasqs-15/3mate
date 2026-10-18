@@ -199,15 +199,28 @@ button{-webkit-tap-highlight-color:transparent;}
   transition:left .27s var(--ease-out),top .27s var(--ease-out),opacity .18s var(--ease-out),transform .18s var(--ease-spring);
   will-change:left,top,transform;transform:translateZ(0);
 }
-.piece img{width:86%;height:86%;display:block;pointer-events:none;-webkit-user-drag:none;user-select:none;}
+.piece img{position:relative;z-index:1;width:86%;height:86%;display:block;pointer-events:none;-webkit-user-drag:none;user-select:none;}
+/* Soft internal lighting: the PNG silhouette is reused as a mask, so the
+   highlight/shade stays on the body instead of casting an outer shadow. */
+.piece::before{content:"";position:absolute;z-index:2;left:7%;top:7%;width:86%;height:86%;pointer-events:none;opacity:.58;
+  background:
+    radial-gradient(ellipse 58% 50% at var(--light-x,24%) var(--light-y,20%),rgba(255,255,255,.22),rgba(255,255,255,0) 62%),
+    linear-gradient(var(--light-angle,135deg),rgba(255,255,255,.08),rgba(255,255,255,0) 46%,rgba(22,28,36,.13) 100%);
+  -webkit-mask-image:var(--piece-mask);mask-image:var(--piece-mask);
+  -webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  mix-blend-mode:soft-light;transition:opacity .2s ease;}
 .piece.pop-in{animation:pieceIn .22s var(--ease-spring);}
 .piece.vanish{opacity:0;transform:scale(.48) rotate(7deg);transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);}
 .piece.lifted{transform:scale(1.075) translateY(-2.5%);z-index:10;}
 .piece.dragging{cursor:grabbing;z-index:30;transition:none!important;transform:scale(1.12);}
 .piece.tap-bounce img{animation:pieceTapBounce .28s var(--ease-spring);}
+.piece.soft-pop img{animation:pieceBulge .34s cubic-bezier(.2,1.35,.35,1);}
+.piece.soft-pop::before{animation:pieceLightBulge .34s cubic-bezier(.2,1.35,.35,1);}
 .piece.piece-ghost{opacity:.17;pointer-events:none;transition:none!important;z-index:2;filter:none;}
 @keyframes pieceIn{0%{transform:scale(.55);opacity:0}68%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 @keyframes pieceTapBounce{0%{transform:scale(1)}38%{transform:scale(.84)}68%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes pieceBulge{0%{transform:scale(1,1)}18%{transform:scale(.975,1.018)}48%{transform:scale(1.045,1.038)}72%{transform:scale(1.014,1.012)}100%{transform:scale(1,1)}}
+@keyframes pieceLightBulge{0%,100%{opacity:.58;transform:scale(1)}45%{opacity:.78;transform:scale(1.045,1.038)}75%{opacity:.62;transform:scale(1.014,1.012)}}
 .board-shroud{
   position:absolute;inset:9px;border-radius:12px;z-index:15;
   display:flex;align-items:center;justify-content:center;
@@ -4625,8 +4638,8 @@ function commitPlayerMove(mv){
     state.puzzleMoveIndex++;
     playSound(getMoveSoundType(mv));
     showTemporaryFeedback('');
-    if(state.puzzleMoveIndex>=puzzle.moves.length){ renderBoard(); setTimeout(function(){completeCurrentPuzzle('solved');},300); }
-    else { state.status='opponent-move'; renderAll(); setTimeout(playOpponentReply,520); }
+    if(state.puzzleMoveIndex>=puzzle.moves.length){ renderBoard(); triggerPieceBulgeAt(toAlg); setTimeout(function(){completeCurrentPuzzle('solved');},300); }
+    else { state.status='opponent-move'; renderAll(); triggerPieceBulgeAt(toAlg); setTimeout(playOpponentReply,520); }
   }else{
     recordDailyMistake();
   }
@@ -4641,7 +4654,7 @@ function playOpponentReply(){
   const info=applyMoveToPieceList(mv); state.chess.makeMove(mv);
   if(info.capturedId) removePieceWithFade(info.capturedId);
   state.lastMove={from:algebraic(mv.from),to:algebraic(mv.to),good:false}; state.puzzleMoveIndex++;
-  playSound(getMoveSoundType(mv)); state.status='player-turn'; renderAll();
+  playSound(getMoveSoundType(mv)); state.status='player-turn'; renderAll(); triggerPieceBulgeAt(algebraic(mv.to));
 }
 function expectedFromNow(){
   const p=PUZZLES[state.currentPuzzleIndex]; return p && p.moves[state.puzzleMoveIndex] ? p.moves[state.puzzleMoveIndex] : null;
@@ -4787,6 +4800,7 @@ function removePieceWithFade(id){
 }
 
 function syncPieceDOM(){
+  applyExperimentPieceLighting();
   const layer = document.getElementById('pieceLayer');
   const seen = new Set();
   state.pieces.forEach(function(pc){
@@ -4794,11 +4808,14 @@ function syncPieceDOM(){
     const pos = squarePos(pc.sq);
     const key = pc.type+pc.color;
     let el = pieceEls.get(pc.id);
+    const pngKey = pc.color==='w' ? pc.type.toUpperCase() : pc.type.toLowerCase();
+    if(el) el.style.setProperty('--piece-mask','url(\"data:image/png;base64,'+PIECE_PNG[pngKey]+'\")');
     if(!el){
       el = document.createElement('div');
       el.className = 'piece pop-in';
       el.dataset.pkey = key;
       el.style.left = pos.left+'%'; el.style.top = pos.top+'%';
+      el.style.setProperty('--piece-mask','url(\"data:image/png;base64,'+PIECE_PNG[pngKey]+'\")');
       el.innerHTML = pieceSVG(pc.type, pc.color==='w');
       layer.appendChild(el);
       pieceEls.set(pc.id, el);
@@ -5302,6 +5319,36 @@ function checkDayChange(){
    the daily-session lifecycle with an endless rating-based puzzle loop.
 -------------------------------------------------------------------------- */
 const experimentBaseRenderAll = renderDailyAll;
+const EXPERIMENT_LIGHT_DIRECTIONS=[
+  {x:'18%',y:'18%',angle:'135deg'},
+  {x:'50%',y:'12%',angle:'180deg'},
+  {x:'82%',y:'18%',angle:'225deg'},
+  {x:'88%',y:'50%',angle:'270deg'},
+  {x:'82%',y:'82%',angle:'315deg'},
+  {x:'50%',y:'88%',angle:'0deg'},
+  {x:'18%',y:'82%',angle:'45deg'},
+  {x:'12%',y:'50%',angle:'90deg'}
+];
+function chooseExperimentPieceLighting(){
+  return EXPERIMENT_LIGHT_DIRECTIONS[Math.floor(Math.random()*EXPERIMENT_LIGHT_DIRECTIONS.length)];
+}
+function applyExperimentPieceLighting(){
+  const layer=document.getElementById('pieceLayer');
+  const light=state.pieceLighting||EXPERIMENT_LIGHT_DIRECTIONS[0];
+  if(!layer) return;
+  layer.style.setProperty('--light-x',light.x);
+  layer.style.setProperty('--light-y',light.y);
+  layer.style.setProperty('--light-angle',light.angle);
+}
+function triggerPieceBulgeAt(square){
+  const pc=state.pieces.find(function(item){return item.sq===square;});
+  const el=pc && pieceEls.get(pc.id);
+  if(!el) return;
+  el.classList.remove('soft-pop');
+  void el.offsetWidth;
+  el.classList.add('soft-pop');
+  setTimeout(function(){if(el.parentNode) el.classList.remove('soft-pop');},380);
+}
 function chooseExperimentPuzzle(){
   if(!PUZZLES.length) return 0;
   if(state.playedPuzzleIds.size >= PUZZLES.length) state.playedPuzzleIds.clear();
@@ -5319,6 +5366,7 @@ function chooseExperimentPuzzle(){
 }
 function createExperimentSession(idx){
   const p=PUZZLES[idx];
+  state.pieceLighting=chooseExperimentPieceLighting();
   state.daily={
     date:'unlimited',
     puzzleIds:[idx],
