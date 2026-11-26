@@ -3893,6 +3893,11 @@ function syncPieceDOM(){
     if(!el){
       el = document.createElement('div');
       el.className = 'piece pop-in';
+      // Remove the entry animation once it finishes so later tap effects
+      // cannot restart it and briefly make the piece transparent.
+      el.addEventListener('animationend', function(event){
+        if(event.animationName==='pieceIn') el.classList.remove('pop-in');
+      });
       el.dataset.pkey = key;
       el.style.left = pos.left+'%'; el.style.top = pos.top+'%';
       el.style.setProperty('--piece-mask','url(\"data:image/png;base64,'+PIECE_PNG[pngKey]+'\")');
@@ -4081,6 +4086,9 @@ function boardPointerMove(e){
 
 function triggerPieceTap(pieceDiv){
   if(!pieceDiv) return;
+  // pop-in uses opacity:0 at its start. Never let the tap animation
+  // restore that entry animation after the user clicks a piece.
+  pieceDiv.classList.remove('pop-in');
   pieceDiv.classList.remove('tap-bounce');
   void pieceDiv.offsetWidth;
   pieceDiv.classList.add('tap-bounce');
@@ -4409,6 +4417,9 @@ function chooseExperimentPieceLighting(){return EXPERIMENT_LIGHT_DIRECTIONS[Math
 function applyExperimentPieceLighting(){return true;}
 function triggerPieceBulgeAt(square){
   const pc=state.pieces.find(function(item){return item.sq===square;}), el=pc&&pieceEls.get(pc.id); if(!el) return;
+  // soft-pop temporarily replaces the element's animation shorthand.
+  // Remove pop-in first so it cannot replay from opacity:0 when soft-pop ends.
+  el.classList.remove('pop-in');
   el.classList.remove('soft-pop'); void el.offsetWidth; el.classList.add('soft-pop');
   setTimeout(function(){if(el.parentNode) el.classList.remove('soft-pop');},380);
 }
