@@ -9,8 +9,8 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#24272c">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#d8c9d9">
+<meta name="color-scheme" content="light">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -100,6 +100,78 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(246,201,69,.55);
 @media (max-width:800px){#app{padding:12px 12px calc(24px + env(safe-area-inset-bottom))}.topbar{margin-bottom:12px}.brand-mark{width:34px;height:34px;border-radius:11px;font-size:18px}.brand-name{font-size:22px}.brand-sub{font-size:9px}.top-action{min-height:36px;padding:0 9px;font-size:11px}.top-action.stats-label{display:none}.rating-pill{padding:7px 9px}.rating-pill .rating-label{display:none}.trainer-shell{display:block}.side-column{margin-top:14px}.puzzle-head{margin-top:4px}.puzzle-title{font-size:22px}.status-card{padding:14px}.side-column .status-card{display:none}.score-card{padding:14px}.footer-row{margin-top:13px}}
 @media (max-width:440px){.top-actions{gap:5px}.top-actions .rating-pill{display:flex}.puzzle-stage-chip{font-size:10px;padding:7px 8px}.score-grid{gap:5px}.metric-value{font-size:18px}.controls-row{gap:8px}.btn{padding:0 12px}.onboard-card,.modal-card{padding:22px}.onboard-title,.modal-title{font-size:26px}.onboard-presets{grid-template-columns:repeat(2,1fr)}}
 @media (min-width:801px){.play-column{display:flex;flex-direction:column}.play-column .puzzle-head{order:0}.play-column .board-wrap{order:1}.play-column .score-card{order:2;margin:14px auto 0;width:min(100%,680px)}.play-column .controls-row{order:3;width:min(100%,680px);margin:12px auto 0}.play-column .helper-note{order:4;width:min(100%,680px);margin:8px auto 0}.side-column .result-card{order:0}.side-column .status-card{order:1}.side-column .tool-card{order:2}}
+
+/* Soft retro theme: muted coral, lavender, warm gold, and friendly rounded forms. */
+:root{
+  --bg:#e7d7dc;
+  --bg-deep:#d8c9d9;
+  --surface:#f6ebe2;
+  --surface-2:#e7dced;
+  --surface-3:#d8c9e0;
+  --board-light:#f2e5cf;
+  --board-dark:#809777;
+  --board-light-shadow:#e6d5bd;
+  --accent:#d9aa2e;
+  --accent-strong:#e8bd3e;
+  --accent-ink:#3d3015;
+  --ink:#393343;
+  --muted:#756d7e;
+  --muted-2:#958999;
+  --good:#609875;
+  --good-ink:#183b2a;
+  --bad:#c96663;
+  --bad-ink:#4b1f22;
+  --line:rgba(70,52,78,.14);
+  --line-strong:rgba(70,52,78,.24);
+  --shadow-soft:0 14px 32px rgba(87,61,89,.16);
+  --shadow-board:0 24px 50px rgba(87,61,89,.2),0 0 0 1px rgba(255,255,255,.36);
+}
+html,body{background:var(--bg-deep)}
+body{
+  background:
+    radial-gradient(620px 360px at 7% -8%,rgba(229,126,116,.42),transparent 72%),
+    radial-gradient(560px 380px at 96% 8%,rgba(186,169,226,.34),transparent 70%),
+    linear-gradient(180deg,#e5d3da 0%,var(--bg-deep) 76%);
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(340px 220px at 50% 100%,rgba(255,245,221,.24),transparent 72%)}
+button:focus-visible,input:focus-visible{outline-color:rgba(217,170,46,.72)}
+.brand-mark,.onboard-mark{background:linear-gradient(145deg,#f1ca58,#dca33c);color:#49350d;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 22px rgba(111,73,46,.18)}
+.brand-sub{color:var(--muted)}
+.top-action,.btn-icon{background:rgba(255,255,255,.34);color:var(--muted);border-color:var(--line)}
+.top-action:hover,.btn-icon:hover{background:rgba(255,255,255,.56);color:var(--ink)}
+.rating-pill{background:linear-gradient(145deg,rgba(255,255,255,.62),rgba(244,232,238,.42));border-color:var(--line-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px rgba(95,69,93,.08)}
+.rating-pill strong,.puzzle-eyebrow,.result-kicker{color:var(--accent)}
+.puzzle-stage-chip,.meta-chip{background:rgba(217,170,46,.16);border-color:rgba(173,126,23,.25);color:#8a6812}
+.board-wrap{box-shadow:var(--shadow-board)}
+.sq.dark{background:linear-gradient(145deg,#8fa685,var(--board-dark))}
+.sq.last-from,.sq.last-to{box-shadow:inset 0 0 0 999px rgba(217,170,46,.34)}
+.sq.sel{box-shadow:inset 0 0 0 999px rgba(217,170,46,.48)}
+.status-card,.score-card,.tool-card,.result-card{border-color:var(--line);background:linear-gradient(145deg,rgba(251,241,232,.94),rgba(235,221,232,.95));box-shadow:var(--shadow-soft)}
+.status-row,.metric-label,.card-kicker{color:var(--muted)}
+.player-color-chip,.helper-note,.footer-row{color:var(--muted-2)}
+.player-color-chip.black i{background:#403a47;border-color:rgba(255,255,255,.7)}
+.turn-dot{background:var(--accent);box-shadow:0 0 0 4px rgba(217,170,46,.16)}
+.turn-dot.b{background:#fbf5e9;box-shadow:0 0 0 4px rgba(95,75,93,.12)}
+.result-card.success{border-color:rgba(96,152,117,.4)}
+.result-card.failure{border-color:rgba(201,102,99,.42)}
+.btn{box-shadow:inset 0 1px 0 rgba(255,255,255,.48),0 6px 14px rgba(95,69,93,.12)}
+.btn-primary{background:linear-gradient(180deg,var(--accent-strong),#dbaa32);color:var(--accent-ink)}
+.btn-ghost{background:rgba(255,255,255,.43);color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{background:rgba(255,255,255,.66)}
+.btn-reveal,.btn-danger{background:rgba(201,102,99,.14);color:#a84f50;border-color:rgba(176,75,77,.25)}
+.streak-meter{background:rgba(101,77,103,.13)}
+.streak-meter span{background:linear-gradient(90deg,#d29c2e,var(--accent-strong))}
+.onboard-overlay,.modal-overlay{background:rgba(68,47,72,.48)}
+.onboard-card,.modal-card{border-color:rgba(92,66,99,.22);background:linear-gradient(145deg,#f8ece2,#e7dced);box-shadow:0 30px 80px rgba(81,54,84,.26)}
+.onboard-kicker{color:#9a7414}
+.onboard-sub,.modal-sub,.settings-row small{color:var(--muted)}
+.onboard-input{background:rgba(255,255,255,.5);border-color:var(--line-strong);color:var(--ink)}
+.onboard-input:focus{border-color:rgba(217,170,46,.72);box-shadow:0 0 0 4px rgba(217,170,46,.14)}
+.preset-btn,.stats-tile,.toggle{background:rgba(255,255,255,.3);border-color:var(--line)}
+.preset-btn:hover,.preset-btn.active{background:rgba(217,170,46,.15);border-color:rgba(173,126,23,.34);color:#8a6812}
+.toggle{background:#b4a7ba}.toggle:before{background:#fffaf0}.toggle.on{background:var(--accent)}
+.modal-close{background:rgba(255,255,255,.4);color:var(--muted)}
+
 </style>
 </head>
 <body>
