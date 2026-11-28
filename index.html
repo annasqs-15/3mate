@@ -143,7 +143,7 @@ button:focus-visible,input:focus-visible{outline-color:rgba(217,170,46,.72)}
 .rating-pill strong,.puzzle-eyebrow,.result-kicker{color:var(--accent)}
 .puzzle-stage-chip,.meta-chip{background:rgba(217,170,46,.16);border-color:rgba(173,126,23,.25);color:#8a6812}
 .board-wrap{box-shadow:var(--shadow-board)}
-.sq.dark{background:linear-gradient(145deg,#8fa685,var(--board-dark))}
+.sq{transition:none;filter:none}.sq.light{background:#eeeed2}.sq.dark{background:#769656}.board{background:#769656}
 .sq.last-from,.sq.last-to{box-shadow:inset 0 0 0 999px rgba(217,170,46,.34)}
 .sq.sel{box-shadow:inset 0 0 0 999px rgba(217,170,46,.48)}
 .status-card,.score-card,.tool-card,.result-card{border-color:var(--line);background:linear-gradient(145deg,rgba(251,241,232,.94),rgba(235,221,232,.95));box-shadow:var(--shadow-soft)}
@@ -3389,6 +3389,7 @@ const state = {
   currentDailySlot:0,
   chess:null,
   puzzleMoveIndex:0,
+  lastCorrectMoveIndex:0,
   playerColor:'w',
   selectedSquare:null,
   legalTargets:[],
@@ -3701,6 +3702,7 @@ function loadPuzzleByIndex(idx, isRetry, resumeAtMoveIndex){
   hideRatingDelta();
   buildPieceListFromBoard(); clearPieceLayer(); renderSquares();
   const resumeAt=resumeAtMoveIndex||0;
+  state.lastCorrectMoveIndex=resumeAt;
   for(let i=0;i<resumeAt && i<p.moves.length;i++){
     const mv=state.chess.moveFromUCI(p.moves[i]); if(!mv) break;
     const info=applyMoveToPieceList(mv); state.chess.makeMove(mv);
@@ -3806,6 +3808,7 @@ function commitPlayerMove(mv){
     const displayLabel=getPuzzleDisplayLabel(state.currentPuzzleIndex,played);
     setPlayerMoveBadge(toAlg,displayLabel);
     state.puzzleMoveIndex++;
+    state.lastCorrectMoveIndex=state.puzzleMoveIndex;
     playSound(getMoveSoundType(mv));
     showTemporaryFeedback('');
     if(state.puzzleMoveIndex>=puzzle.moves.length){ renderBoard(); triggerPieceBulgeAt(toAlg); setTimeout(function(){completeCurrentPuzzle('solved');},300); }
@@ -3824,6 +3827,7 @@ function playOpponentReply(){
   const info=applyMoveToPieceList(mv); state.chess.makeMove(mv);
   if(info.capturedId) removePieceWithFade(info.capturedId);
   state.lastMove={from:algebraic(mv.from),to:algebraic(mv.to),good:false}; state.puzzleMoveIndex++;
+  state.lastCorrectMoveIndex=state.puzzleMoveIndex;
   playSound(getMoveSoundType(mv)); state.status='player-turn'; renderAll(); triggerPieceBulgeAt(algebraic(mv.to));
 }
 function expectedFromNow(){
@@ -4558,7 +4562,7 @@ function chooseExperimentPuzzle(){
 function createExperimentSession(idx){
   ensureUnlimitedState(); const p=PUZZLES[idx]; state.pieceLighting=chooseExperimentPieceLighting();
   state.daily={date:'unlimited',puzzleIds:[idx],slots:[{status:'pending',mistakes:0,hintUsed:false}],currentSlot:0,complete:false,completedAt:null,ratingBefore:state.playerRating,ratingDelta:0};
-  state.currentDailySlot=0; state.currentPuzzleIndex=idx; state.currentMistakes=0; state.hintUsed=false; state.ratingDeltaToday=0; state.experimentPuzzleNumber++; state.recentPuzzleIds.add(idx); state.playedPuzzleIds=state.recentPuzzleIds; state.puzzleStartedAt=Date.now(); state.elapsedSeconds=0; state.replayNoRating=false;
+  state.currentDailySlot=0; state.currentPuzzleIndex=idx; state.currentMistakes=0; state.hintUsed=false; state.ratingDeltaToday=0; state.experimentPuzzleNumber++; state.recentPuzzleIds.add(idx); state.playedPuzzleIds=state.recentPuzzleIds; state.puzzleStartedAt=Date.now(); state.elapsedSeconds=0; state.replayNoRating=false; state.lastCorrectMoveIndex=0;
   loadPuzzleByIndex(idx,false,0); saveProgress();
 }
 function startExperimentPuzzle(){createExperimentSession(chooseExperimentPuzzle());}
@@ -4584,8 +4588,8 @@ function recordDailyMistake(){
   setTimeout(function(){if(state.status==='player-turn') completeCurrentPuzzle('failed');},240); saveProgress(); renderAll();
 }
 function goToNextDailyPuzzle(){if(state.status==='puzzle-complete') startExperimentPuzzle();}
-function retryPuzzle(){if(state.status==='player-turn') loadPuzzleByIndex(state.currentPuzzleIndex,false,0);}
-function retryUnratedPuzzle(){state.replayNoRating=true;state.ratingDeltaToday=0;if(state.daily&&state.daily.slots[0]){state.daily.slots[0].status='pending';state.daily.slots[0].mistakes=0;state.daily.slots[0].hintUsed=false;}state.currentMistakes=0;state.hintUsed=false;loadPuzzleByIndex(state.currentPuzzleIndex,true,0);saveProgress();}
+function retryPuzzle(){if(state.status==='player-turn') loadPuzzleByIndex(state.currentPuzzleIndex,false,state.lastCorrectMoveIndex||0);}
+function retryUnratedPuzzle(){state.replayNoRating=true;state.ratingDeltaToday=0;if(state.daily){state.daily.complete=false;state.daily.completedAt=null;if(state.daily.slots[0]){state.daily.slots[0].status='pending';state.daily.slots[0].mistakes=0;state.daily.slots[0].hintUsed=false;}}state.currentMistakes=0;state.hintUsed=false;const resumeAt=state.lastCorrectMoveIndex||0;loadPuzzleByIndex(state.currentPuzzleIndex,true,resumeAt);saveProgress();}
 function formatTimer(seconds){const m=Math.floor(seconds/60),s=String(seconds%60).padStart(2,'0');return m+':'+s;}
 function updateTrainerTimer(){
   if(state.status==='player-turn'||state.status==='opponent-move'||state.status==='revealing'){state.elapsedSeconds=Math.max(0,Math.round((Date.now()-(state.puzzleStartedAt||Date.now()))/1000));const el=document.getElementById('timerValue');if(el)el.textContent=formatTimer(state.elapsedSeconds);}
